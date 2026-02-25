@@ -333,15 +333,78 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
         return bestAction
 
-def betterEvaluationFunction(currentGameState: GameState):
+def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION (high level):
+    - Start from the built-in score.
+    - Encourage eating food: closer food => better.
+    - Encourage clearing all food: fewer food left => better.
+    - Encourage capsules: fewer capsules left => better, and closer capsule => better.
+    - Ghosts:
+        * If ghost not scared: heavily penalize being too close.
+        * If ghost scared: reward being close (so you can eat it).
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import manhattanDistance
+    from game import Directions
+    if currentGameState.isWin():
+        return float("inf")
+    if currentGameState.isLose():
+        return float("-inf")
 
-# Abbreviation
+    pos = currentGameState.getPacmanPosition()
+    foodList = currentGameState.getFood().asList()
+    capsules = currentGameState.getCapsules()
+    ghostStates = currentGameState.getGhostStates()
+
+    score = currentGameState.getScore()
+
+    if foodList:
+        dFoodMin = min(manhattanDistance(pos, f) for f in foodList)
+        score += 12.0 / (dFoodMin + 1.0)
+        score -= 4.0 * len(foodList)
+    else:
+        score += 1000.0
+
+    if capsules:
+        dCapMin = min(manhattanDistance(pos, c) for c in capsules)
+        score += 4.0 / (dCapMin + 1.0)
+        score -= 18.0 * len(capsules)
+
+    activeMin = None
+    scaredMin = None
+    totalScared = 0
+
+    for g in ghostStates:
+        d = manhattanDistance(pos, g.getPosition())
+        if g.scaredTimer > 0:
+            totalScared += g.scaredTimer
+            scaredMin = d if scaredMin is None else min(scaredMin, d)
+        else:
+            activeMin = d if activeMin is None else min(activeMin, d)
+
+    if activeMin is not None:
+        if activeMin <= 1:
+            score -= 2000.0
+        elif activeMin == 2:
+            score -= 800.0
+        elif activeMin == 3:
+            score -= 200.0
+        else:
+            score -= 2.0 / (activeMin + 1.0)
+
+    if scaredMin is not None:
+        score += 35.0 / (scaredMin + 1.0)
+        score += 0.2 * totalScared
+
+    try:
+        if Directions.STOP in currentGameState.getLegalPacmanActions():
+            score -= 1.5
+    except Exception:
+        pass
+
+    return score
+
 better = betterEvaluationFunction
