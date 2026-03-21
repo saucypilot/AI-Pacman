@@ -499,7 +499,15 @@ if __name__ == '__main__':
             opts.episodes = 10
         class RandomAgent:
             def getAction(self, state):
-                return random.choice(mdp.getPossibleActions(state))
+                legalActions = self.getLegalActions(state)
+
+                if len(legalActions) == 0:
+                    return None
+
+                if util.flipCoin(self.epsilon):
+                    return random.choice(legalActions)
+                else:
+                    return self.computeActionFromQValues(state)
             def getValue(self, state):
                 return 0.0
             def getQValue(self, state, action):
