@@ -60,8 +60,51 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+
+        for _ in range(self.iterations):
+            newValues = util.Counter()
+
+            for state in states:
+                actions = self.mdp.getPossibleActions(state)
+
+                # Terminal state / no legal actions
+                if not actions:
+                    newValues[state] = 0
+                    continue
+
+                qValues = [self.computeQValueFromValues(state, action) for action in actions]
+                newValues[state] = max(qValues)
+
+            self.values = newValues
+
+
+    def computeQValueFromValues(self, state, action):
+        qValue = 0
+
+        for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            reward = self.mdp.getReward(state, action, nextState)
+            qValue += prob * (reward + self.discount * self.values[nextState])
+
+        return qValue
+
+
+    def computeActionFromValues(self, state):
+        actions = self.mdp.getPossibleActions(state)
+
+        if not actions:
+            return None
+
+        bestAction = None
+        bestValue = float("-inf")
+
+        for action in actions:
+            qValue = self.computeQValueFromValues(state, action)
+            if qValue > bestValue:
+                bestValue = qValue
+                bestAction = action
+
+        return bestAction
 
 
     def getValue(self, state):
@@ -69,27 +112,6 @@ class ValueIterationAgent(ValueEstimationAgent):
           Return the value of the state (computed in __init__).
         """
         return self.values[state]
-
-
-    def computeQValueFromValues(self, state, action):
-        """
-          Compute the Q-value of action in state from the
-          value function stored in self.values.
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-    def computeActionFromValues(self, state):
-        """
-          The policy is the best action in the given state
-          according to the values currently stored in self.values.
-
-          You may break ties any way you see fit.  Note that if
-          there are no legal actions, which is the case at the
-          terminal state, you should return None.
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
