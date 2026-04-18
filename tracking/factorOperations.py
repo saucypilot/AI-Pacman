@@ -74,19 +74,9 @@ def joinFactors(factors: List[Factor]):
 
     joinFactors will only allow unconditionedVariables to appear in 
     one input factor (so their join is well defined).
-
-    Hint: Factor methods that take an assignmentDict as input 
-    (such as getProbability and setProbability) can handle 
-    assignmentDicts that assign more variables than are in that factor.
-
-    Useful functions:
-    Factor.getAllPossibleAssignmentDicts
-    Factor.getProbability
-    Factor.setProbability
-    Factor.unconditionedVariables
-    Factor.conditionedVariables
-    Factor.variableDomainsDict
     """
+
+    factors = list(factors)
 
     # typecheck portion
     setsOfUnconditioned = [set(factor.unconditionedVariables()) for factor in factors]
@@ -100,10 +90,25 @@ def joinFactors(factors: List[Factor]):
                     "Input factors: \n" +
                     "\n".join(map(str, factors)))
 
+    unconditioned = set()
+    conditioned = set()
 
-    "*** YOUR CODE HERE ***"
-    raiseNotDefined()
-    "*** END YOUR CODE HERE ***"
+    for factor in factors:
+        unconditioned |= set(factor.unconditionedVariables())
+        conditioned |= set(factor.conditionedVariables())
+
+    conditioned -= unconditioned
+
+    variableDomainsDict = factors[0].variableDomainsDict()
+    joinedFactor = Factor(unconditioned, conditioned, variableDomainsDict)
+
+    for assignment in joinedFactor.getAllPossibleAssignmentDicts():
+        prob = 1.0
+        for factor in factors:
+            prob *= factor.getProbability(assignment)
+        joinedFactor.setProbability(assignment, prob)
+
+    return joinedFactor
 
 ########### ########### ###########
 ########### QUESTION 3  ###########
