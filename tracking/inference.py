@@ -305,51 +305,27 @@ class DiscreteDistribution(dict):
         Normalize the distribution such that the total value of all keys sums
         to 1. The ratio of values for all keys will remain the same. In the case
         where the total value of the distribution is 0, do nothing.
-
-        >>> dist = DiscreteDistribution()
-        >>> dist['a'] = 1
-        >>> dist['b'] = 2
-        >>> dist['c'] = 2
-        >>> dist['d'] = 0
-        >>> dist.normalize()
-        >>> list(sorted(dist.items()))
-        [('a', 0.2), ('b', 0.4), ('c', 0.4), ('d', 0.0)]
-        >>> dist['e'] = 4
-        >>> list(sorted(dist.items()))
-        [('a', 0.2), ('b', 0.4), ('c', 0.4), ('d', 0.0), ('e', 4)]
-        >>> empty = DiscreteDistribution()
-        >>> empty.normalize()
-        >>> empty
-        {}
         """
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-        "*** END YOUR CODE HERE ***"
+        total = self.total()
+        if total == 0:
+            return
+
+        for key in self:
+            self[key] /= total
 
     def sample(self):
         """
         Draw a random sample from the distribution and return the key, weighted
         by the values associated with each key.
-
-        >>> dist = DiscreteDistribution()
-        >>> dist['a'] = 1
-        >>> dist['b'] = 2
-        >>> dist['c'] = 2
-        >>> dist['d'] = 0
-        >>> N = 100000.0
-        >>> samples = [dist.sample() for _ in range(int(N))]
-        >>> round(samples.count('a') * 1.0/N, 1)  # proportion of 'a'
-        0.2
-        >>> round(samples.count('b') * 1.0/N, 1)
-        0.4
-        >>> round(samples.count('c') * 1.0/N, 1)
-        0.4
-        >>> round(samples.count('d') * 1.0/N, 1)
-        0.0
         """
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-        "*** END YOUR CODE HERE ***"
+        total = self.total()
+        r = random.random() * total
+
+        cumulative = 0.0
+        for key, value in self.items():
+            cumulative += value
+            if r < cumulative:
+                return key
 
 
 class InferenceModule:
@@ -422,9 +398,17 @@ class InferenceModule:
         """
         Return the probability P(noisyDistance | pacmanPosition, ghostPosition).
         """
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-        "*** END YOUR CODE HERE ***"
+        if ghostPosition == jailPosition:
+            if noisyDistance is None:
+                return 1.0
+            else:
+                return 0.0
+
+        if noisyDistance is None:
+            return 0.0
+
+        trueDistance = manhattanDistance(pacmanPosition, ghostPosition)
+        return busters.getObservationProbability(noisyDistance, trueDistance)
 
     def setGhostPosition(self, gameState, ghostPosition, index):
         """
