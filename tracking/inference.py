@@ -158,43 +158,7 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
 
         It should perform inference by interleaving joining on a variable
         and eliminating that variable, in the order of variables according
-        to eliminationOrder.  See inferenceByEnumeration for an example on
-        how to use these functions.
-
-        You need to use joinFactorsByVariable to join all of the factors 
-        that contain a variable in order for the autograder to 
-        recognize that you performed the correct interleaving of 
-        joins and eliminates.
-
-        If a factor that you are about to eliminate a variable from has 
-        only one unconditioned variable, you should not eliminate it 
-        and instead just discard the factor.  This is since the 
-        result of the eliminate would be 1 (you marginalize 
-        all of the unconditioned variables), but it is not a 
-        valid factor.  So this simplifies using the result of eliminate.
-
-        The sum of the probabilities should sum to one (so that it is a true 
-        conditional probability, conditioned on the evidence).
-
-        bayesNet:         The Bayes Net on which we are making a query.
-        queryVariables:   A list of the variables which are unconditioned
-                          in the inference query.
-        evidenceDict:     An assignment dict {variable : value} for the
-                          variables which are presented as evidence
-                          (conditioned) in the inference query. 
-        eliminationOrder: The order to eliminate the variables in.
-
-        Hint: BayesNet.getAllCPTsWithEvidence will return all the Conditional 
-        Probability Tables even if an empty dict (or None) is passed in for 
-        evidenceDict. In this case it will not specialize any variable domains 
-        in the CPTs.
-
-        Useful functions:
-        BayesNet.getAllCPTsWithEvidence
-        normalize
-        eliminate
-        joinFactorsByVariable
-        joinFactors
+        to eliminationOrder.
         """
 
         # this is for autograding -- don't modify
@@ -202,13 +166,25 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
         eliminate             = eliminateWithCallTracking(callTrackingList)
         if eliminationOrder is None: # set an arbitrary elimination order if None given
             eliminationVariables = bayesNet.variablesSet() - set(queryVariables) -\
-                                   set(evidenceDict.keys())
+                                set(evidenceDict.keys())
             eliminationOrder = sorted(list(eliminationVariables))
 
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-        "*** END YOUR CODE HERE ***"
 
+        currentFactorsList = bayesNet.getAllCPTsWithEvidence(evidenceDict)
+
+        for eliminationVariable in eliminationOrder:
+            currentFactorsList, joinedFactor = joinFactorsByVariable(currentFactorsList, eliminationVariable)
+
+            if len(joinedFactor.unconditionedVariables()) > 1:
+                reducedFactor = eliminate(joinedFactor, eliminationVariable)
+                currentFactorsList.append(reducedFactor)
+            # else: discard the factor
+
+        fullJoint = joinFactors(currentFactorsList)
+        return normalize(fullJoint)
+
+        "*** END YOUR CODE HERE ***"
 
     return inferenceByVariableElimination
 
