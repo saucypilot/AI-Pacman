@@ -129,14 +129,6 @@ def eliminateWithCallTracking(callTrackingList=None):
         Return a new factor where all of the rows mentioning
         eliminationVariable are summed with rows that match
         assignments on the other variables.
-
-        Useful functions:
-        Factor.getAllPossibleAssignmentDicts
-        Factor.getProbability
-        Factor.setProbability
-        Factor.unconditionedVariables
-        Factor.conditionedVariables
-        Factor.variableDomainsDict
         """
         # autograder tracking -- don't remove
         if not (callTrackingList is None):
@@ -158,7 +150,24 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+
+        unconditioned = set(factor.unconditionedVariables())
+        unconditioned.remove(eliminationVariable)
+        conditioned = set(factor.conditionedVariables())
+
+        variableDomainsDict = factor.variableDomainsDict()
+        reducedFactor = Factor(unconditioned, conditioned, variableDomainsDict)
+
+        for assignment in reducedFactor.getAllPossibleAssignmentDicts():
+            totalProb = 0.0
+            for value in variableDomainsDict[eliminationVariable]:
+                fullAssignment = assignment.copy()
+                fullAssignment[eliminationVariable] = value
+                totalProb += factor.getProbability(fullAssignment)
+            reducedFactor.setProbability(assignment, totalProb)
+
+        return reducedFactor
+
         "*** END YOUR CODE HERE ***"
 
     return eliminate
